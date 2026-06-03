@@ -1,7 +1,7 @@
 # UniFi Controller - Docker (Ubuntu 22.04)
 
-Dockerized UniFi Network Application built on Ubuntu 22.04 (Jammy), based on
-the [unifi_ubuntu_jammy.sh](https://gist.github.com/melchoy/d0cfd6af5a4e39abfcc6c2cd8dacd8ba) install script.
+Ai-assisted Dockerized UniFi Network Application built on Ubuntu 22.04 (Jammy), based on
+the [unifi_ubuntu_jammy.sh](https://gist.github.com/melchoy/d0cfd6af5a4e39abfcc6c2cd8dacd8ba) install script. 
 
 ## Stack
 

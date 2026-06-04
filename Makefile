@@ -1,11 +1,11 @@
-# connect to https://localhost:443  after running
-
 build:
 	docker build -t unifi .
 
+# need host mode so AP can connect back to LAN IP
 run:
 	docker run -d \
 	--name unifi \
+	--network host \
 	-p 8080:8080 \
 	-p 8443:8443 \
 	-p 3478:3478/udp \
@@ -15,4 +15,16 @@ run:
 	--restart unless-stopped \
 	unifi
 
+# remove the container, persistent data, MongoDB, etc. Just start over 
+realclean:
+	@echo "Stopping and removing container..."
+	-docker stop unifi
+	-docker rm unifi
+	@echo "Removing image..."
+	-docker rmi unifi
+	@echo "Removing volumes..."
+	-docker volume rm unifi-data unifi-logs
+	@echo "Done. All UniFi container data has been removed."
+
+.PHONY: build run realclean
 # vim: noexpandtab filetype=make:

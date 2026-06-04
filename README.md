@@ -1,15 +1,15 @@
-# UniFi Controller - Docker (Ubuntu 22.04)
+# UniFi Controller - Docker (Ubuntu 24.04)
 
-Ai-assisted Dockerized UniFi Network Application built on Ubuntu 22.04 (Jammy), based on
-the [unifi_ubuntu_jammy.sh](https://gist.github.com/melchoy/d0cfd6af5a4e39abfcc6c2cd8dacd8ba) install script. 
+Dockerized UniFi Network Application built on Ubuntu 24.04 (Noble), based on
+the [unifi_ubuntu_jammy.sh](https://gist.github.com/melchoy/d0cfd6af5a4e39abfcc6c2cd8dacd8ba) install script.
 
 ## Stack
 
 | Component | Version |
 |-----------|---------|
-| Base image | Ubuntu 22.04 (Jammy) |
+| Base image | Ubuntu 24.04 (Noble) |
 | UniFi Network Application | latest stable (ubiquiti repo) |
-| MongoDB | 4.4 |
+| MongoDB | 6.0 |
 | Java | OpenJDK 17 |
 
 ## Requirements
@@ -32,6 +32,24 @@ docker logs -f unifi
 
 Once started, the UI is available at **https://\<host-ip\>:8443**.  
 Accept the self-signed certificate warning on first visit.
+
+### Full reset
+
+```bash
+make realclean
+```
+
+This stops and removes the container, removes the image, and deletes both
+named volumes. **All adopted device data and site config will be lost.**
+
+Back up the data volume first if you want to preserve your configuration:
+
+```bash
+docker run --rm \
+  -v unifi-data:/data \
+  -v $(pwd):/backup \
+  ubuntu tar czf /backup/unifi-data-backup.tar.gz /data
+```
 
 ## Ports
 
@@ -69,5 +87,38 @@ To avoid this, set a static inform URL:
 
 - `mongod` is launched directly (no systemd in Docker); the entrypoint waits
   for its UNIX socket before starting UniFi.
-- `libssl1.1` is sourced from the Ubuntu 20.04 focal-security repo since it
-  was removed in Jammy.
+- MongoDB 6.0 is built against OpenSSL 3, which ships natively on Noble.
+  No `libssl1.1` workaround needed.
+
+## Running as root
+
+The container entrypoint runs as root. This is required because:
+
+- `service unifi start` invokes UniFi's SysV init script, which needs root to
+  write PID files to `/var/run`, set file ownership, and bind to ports before
+  dropping privileges to the `unifi` system user internally.
+- `mongod` is launched via `su -s /bin/bash mongodb -c ...` and drops to the
+  `mongodb` system user immediately - it does not run as root at steady state.
+
+Both the `unifi` and `mongodb` system users are created by their respective
+packages with no login shell and no password, so the attack surface at runtime
+is limited.
+
+### Steps to make this fully rootless
+
+The cleanest path is to split into two containers via Docker Compose, which
+removes the need for a root entrypoint entirely:
+
+1. Use the official `mongo:6.0` image - it already runs as the `mongodb` user.
+2. Create a minimal UniFi image that runs only `unifi`, with a non-root
+   `USER unifi` directive and no init script - start the JVM directly:
+   ```
+   USER unifi
+   CMD ["java", "-jar", "/usr/lib/unifi/lib/ace.jar", "start"]
+   ```
+3. In `compose.yml`, link the two containers on an internal network so UniFi
+   can reach MongoDB by service name rather than `127.0.0.1`.
+4. Neither container needs `--privileged` or root.
+
+This also has the side benefit of independent restarts - if MongoDB crashes,
+only that container restarts rather than taking UniFi down with it.

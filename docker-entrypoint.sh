@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# ── Start MongoDB directly (no systemd in Docker) ─────────────────────────────
+# -- Start MongoDB ------------------------------------------------------------─
 echo "[entrypoint] Starting mongod..."
 mkdir -p /data/db /var/log/mongodb
 chown -R mongodb:mongodb /data/db /var/log/mongodb
@@ -28,11 +28,11 @@ for i in $(seq 1 60); do
     sleep 1
 done
 
-# ── Start UniFi ───────────────────────────────────────────────────────────────
+# -- Start UniFi --------------------------------------------------------------─
 echo "[entrypoint] Starting UniFi controller..."
 service unifi start
 
-# ── Tail logs ─────────────────────────────────────────────────────────────────
+# -- Tail logs ----------------------------------------------------------------─
 mkdir -p /usr/lib/unifi/logs
 touch /usr/lib/unifi/logs/server.log \
       /usr/lib/unifi/logs/mongod.log \

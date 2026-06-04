@@ -60,7 +60,9 @@ docker run --rm \
 | 3478 | UDP | STUN (device discovery) |
 | 10001 | UDP | L2 device discovery |
 
-## Persistent data
+There is something in the logs about port 9080 failing on localhost. Looks like a bug. More info here: https://github.com/truenas/apps/issues/3428
+
+#e Persistent data
 
 Named volumes are used so adoptions, site config, and certificates survive
 container restarts and image rebuilds.

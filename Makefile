@@ -1,6 +1,11 @@
 build:
 	docker build -t unifi .
 
+# if already run once, container will already exist
+rerun:
+	docker stop unifi
+	docker start unifi
+
 # need host mode so AP can connect back to LAN IP
 run:
 	docker run -d \
